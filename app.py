@@ -24,7 +24,7 @@ class Player:
 @dataclass
 class Room:
     code: str
-    max_players: int = 2
+    max_players: int = 3
     players: Dict[str, Player] = field(default_factory=dict)
     created_at : float = field(default_factory=time.time)
 
@@ -53,6 +53,60 @@ class Room:
             "is_full" : self.is_full(),
             "created_at": self.created_at
         }
+
+class TicTacToeGame:
+    def __init__(self) -> None:
+        self.board : List[Optional[str]] = [None] * 9
+        self.current_turn : str = "X"
+        self.winner : Optional[str] = None
+        self.is_draw : bool = False
+    
+    def play_move(self, index : int) -> bool:
+        if self.winner or self.is_draw:
+            return False
+        if index < 0 or index >= 9:
+            return False
+        if self.board[index] is not None:
+            return False
+        
+        self.board[index] = self.current_turn
+
+        if self._check_winner():
+            self.winner = self.current_turn
+        elif all(cell is not None for cell in self.board):
+            self.is_draw = True
+        
+        if not(self.winner or self.is_draw):
+            self.current_turn = "O" if self.current_turn == "X" else "X"
+        
+        return True
+
+    def _check_winner(self) -> bool:
+        win_combos = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], # Lignes
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], # colonnes
+            [0, 4, 8], [2, 4, 5], # diagonales
+        ]
+
+        for a, b, c in win_combos:
+            if self.board[a] == self.board[b] == self.board[c] and self.board[a] is not None:
+                return True
+            
+        return False
+    
+    def to_public(self) -> Dict:
+        return {
+            "board" : self.board,
+            "current_turn": self.current_turn,
+            "winner": self.winner,
+            "is_draw": self.is_draw,
+        }
+    
+    def reset(self) -> None:
+        self.board = [None] * 9
+        self.current_turn = "X"
+        self.winner = None
+        self.is_draw = False
 
 class Registry:
     def __init__(self) -> None:
